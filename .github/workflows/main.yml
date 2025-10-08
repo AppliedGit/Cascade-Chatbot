@@ -25,14 +25,15 @@ jobs:
         docker save flask-app > flask-app.tar  # Save the Docker image to a tarball for transfer
 
     - name: Transfer Docker Image to DigitalOcean
-      uses: appleboy/scp-action@v0.1.5  # Use SCP action to transfer the image
+      uses: appleboy/ssh-action@v0.1.5  # Use SSH action to transfer the image
       with:
         host: ${{ secrets.SERVER_IP }}  # DigitalOcean IP
         username: ${{ secrets.USERNAME }}  # SSH Username (e.g., root)
         key: ${{ secrets.PRIVATE_KEY }}  # SSH Private Key for login
         port: 22  # Default SSH port
-        source: "flask-app.tar"  # Local file (Docker tarball)
-        target: "/home/${{ secrets.USERNAME }}/docker-images"  # Remote directory for the file
+        script: |
+          mkdir -p ~/docker-images  # Create directory for Docker images
+          scp flask-app.tar ${{ secrets.USERNAME }}@${{ secrets.SERVER_IP }}:/home/${{ secrets.USERNAME }}/docker-images  # Copy the tarball to server
 
     - name: Deploy Docker Image on DigitalOcean
       uses: appleboy/ssh-action@v0.1.5  # Use SSH action to run commands on DigitalOcean
@@ -42,7 +43,6 @@ jobs:
         key: ${{ secrets.PRIVATE_KEY }}  # SSH Private Key for login
         port: 22  # Default SSH port
         script: |
-          mkdir -p ~/docker-images  # Create directory for Docker images (if not exists)
           cd ~/docker-images  # Navigate to the directory containing the tarball
           docker load < flask-app.tar  # Load the Docker image from the tarball
           docker run -d -p 5000:5000 --name flask-app flask-app  # Run the Flask app in a Docker container
