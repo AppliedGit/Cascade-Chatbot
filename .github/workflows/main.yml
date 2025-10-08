@@ -1,0 +1,48 @@
+name: Deploy Dockerized Flask App
+
+on:
+  push:
+    branches:
+      - main  # Trigger the workflow on push to the main branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest  # GitHub-hosted runner
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2  # Checkout the code from GitHub repository
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1  # Set up Docker Buildx (used for multi-platform builds)
+
+    - name: Build Docker Image
+      run: |
+        docker build -t flask-app .  # Build the Docker image from Dockerfile
+
+    - name: Save Docker Image as tarball
+      run: |
+        docker save flask-app > flask-app.tar  # Save the Docker image to a tarball for transfer
+
+    - name: Transfer Docker Image to DigitalOcean
+      uses: appleboy/ssh-action@v0.1.5  # Use SSH action to transfer the image
+      with:
+        host: ${{ secrets.SERVER_IP }}  # DigitalOcean IP
+        username: ${{ secrets.USERNAME }}  # SSH Username (e.g., root)
+        key: ${{ secrets.PRIVATE_KEY }}  # SSH Private Key for login
+        port: 22  # Default SSH port
+        script: |
+          mkdir -p ~/docker-images  # Create directory for Docker images
+          scp flask-app.tar ${{ secrets.USERNAME }}@${{ secrets.SERVER_IP }}:/home/${{ secrets.USERNAME }}/docker-images  # Copy the tarball to server
+
+    - name: Deploy Docker Image on DigitalOcean
+      uses: appleboy/ssh-action@v0.1.5  # Use SSH action to run commands on DigitalOcean
+      with:
+        host: ${{ secrets.SERVER_IP }}  # DigitalOcean IP
+        username: ${{ secrets.USERNAME }}  # SSH Username
+        key: ${{ secrets.PRIVATE_KEY }}  # SSH Private Key for login
+        port: 22  # Default SSH port
+        script: |
+          cd ~/docker-images  # Navigate to the directory containing the tarball
+          docker load < flask-app.tar  # Load the Docker image from the tarball
+          docker run -d -p 5000:5000 --name flask-app flask-app  # Run the Flask app in a Docker container
