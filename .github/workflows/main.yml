@@ -42,6 +42,6 @@ jobs:
         key: ${{ secrets.PRIVATE_KEY }}  # SSH Private Key for login
         port: 22  # Default SSH port
         script: |
-          cd ~/docker-images  # Navigate to the directory containing the tarball
+          cd ~/home/docker-images  # Navigate to the directory containing the tarball
           docker load < flask-app.tar  # Load the Docker image from the tarball
           docker run -d -p 5000:5000 --name flask-app flask-app  # Run the Flask app in a Docker container
