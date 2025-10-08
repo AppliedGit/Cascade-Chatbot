@@ -1,5 +1,4 @@
-name: Deploy Dockerized Flask App
-
+name: Deploy Dockerized Cascade Chatbot App
 on:
   workflow_dispatch:
     inputs:
