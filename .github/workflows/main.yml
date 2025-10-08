@@ -1,9 +1,11 @@
 name: Deploy Dockerized Flask App
 
 on:
-  push:
-    branches:
-      - main  # Trigger the workflow on push to the main branch
+  workflow_dispatch:
+    inputs:
+      name:
+        description: "Deploy Cascade Chatbot from main"
+        default: "main"
 
 jobs:
   deploy:
