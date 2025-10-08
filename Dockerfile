@@ -17,5 +17,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 EXPOSE 5000
 
 # Define the command to run your app
-CMD ["python", "app.py"]  # Adjust to your entry point (app.py or main.py)
+CMD ["python3", "app.py"]  # Adjust to your entry point (app.py or main.py)
 
